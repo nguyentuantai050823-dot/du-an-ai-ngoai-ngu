@@ -1,0 +1,33 @@
+import language_tool_python
+from typing import Dict, Any
+
+# Khởi tạo tool một lần (global) để tái sử dụng
+tool = language_tool_python.LanguageTool('en-US')   # Có thể đổi thành 'en-GB' nếu thích
+
+def run(user_input: str) -> str:
+    """Sửa lỗi ngữ pháp và trả về giải thích + câu đã sửa"""
+    try:
+        matches = tool.check(user_input)
+        
+        if not matches:
+            return f"Câu của bạn đã đúng ngữ pháp rồi! ✅\n\nCâu gốc: {user_input}"
+        
+        corrections = []
+        corrected_text = language_tool_python.utils.correct(user_input, matches)
+        
+        for match in matches:
+            corrections.append({
+                "error": match.ruleId,
+                "message": match.message,
+                "suggestion": match.replacements[0] if match.replacements else "Không có gợi ý"
+            })
+        
+        result = f"✅ **Câu đã sửa:** {corrected_text}\n\n"
+        result += "**Các lỗi tìm thấy:**\n"
+        for i, corr in enumerate(corrections, 1):
+            result += f"{i}. {corr['message']}\n   → Gợi ý: {corr['suggestion']}\n"
+        
+        return result
+        
+    except Exception as e:
+        return f"Lỗi khi kiểm tra ngữ pháp: {str(e)}"
